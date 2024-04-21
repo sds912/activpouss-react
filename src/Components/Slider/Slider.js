@@ -22,8 +22,10 @@ const Slider = () => {
   return (
     <div className={style.slideCover}>
     <Carousel  
-    showIndicators={false} 
+    showIndicators={false}
+    swipeable={false} 
     showStatus={false} 
+    
     infiniteLoop={true}>
     { productSlides.length > 0 && productSlides.map (p => 
       <div className={`row ${style.sliderItem}`}>
