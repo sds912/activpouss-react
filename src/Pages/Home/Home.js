@@ -14,9 +14,13 @@ import ProductVideoList from "../../Components/ProductList/VideoProduct";
 
 const Home = () => {
   return (
-    <div className={styles.mainWrapper}>
-      <Slider />
+    <div >
+      <div className="container-fluid p-0">
+        <Slider />
+      </div>
+      <div className="container-fluid p-0">
       <Caterogry />
+      </div>
       <ProductTitle title={'Produits vedettes'} img={stars} />
       <ProductVedetteList />
       <ProductTitle title={'Produits par catégories'} img={category} />

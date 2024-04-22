@@ -30,14 +30,17 @@ const Caterogry = () => {
   ];
   return (
     <div className="container">
-      <div className={`${styles.categoryWrapper}`}>
+      <div className={`row`}>
         {categories.map((Category) => {
           return (
-            <div key={Category.id} className={styles.categoryItem}>
-                <div className={styles.categoryIcon}>
+            <div key={Category.id} className={'col-12 col-md-6 col-lg-3'}>
+              <div className={styles.categoryItem}>
+              <div className={styles.categoryIcon}>
                   <img src={Category.img} alt={Category.name} />
                 </div>
                 <div className={`text-center mt-3 ${styles.categoryName}`}>{Category.name}</div>
+              </div>
+                
             </div>
           );
         })}

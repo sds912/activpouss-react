@@ -1,15 +1,16 @@
 @import "../../styles//global.scss";
 
 .slideCover{
-  height: 85vh;
+  height: 65vh;
+  
 }
 
 .sliderItem {
-  height: 85vh;
+  height: 60vh;
   position: relative;
   background-color: $white;
   img{
-    height: 350px;
+    height: 60vh;
   }
   h3{
     font-size: 22px;
@@ -22,7 +23,7 @@
   .bgGrey{
     background-color: $grey ;
     position: relative !important;
-    height: 350px;
+    height: 60vh;
   }
 
   p{
@@ -34,7 +35,7 @@
 }
 
 .slideImage{
-  height: 50vh;
+  height: 60vh;
 }
 
 .plusBtn{
@@ -104,53 +105,26 @@
 }
 
 @media (max-width: $media-md) {
+
+  .slideCover{
+    height: 125vh;
+    
+  }
+
+  .slideImage{
+    height: 40vh;
+  }
+
   .sliderItem {
-    height: auto;
-
-    img {
-      height: 50vh;
-    }
-
-    :global {
-      .carousel-caption {
-        top: 10% !important;
-      }
-
-      h1 {
-        font-size: 22px !important;
-        line-height: 24px !important;
-      }
-    }
+    height: 120vh;
   }
-
-  :global {
-    .carousel-indicators {
-      button {
-        display: none;
-      }
-    }
-
-    .rec-carousel-item {
-      .card {
-        margin: 0 !important;
-      }
-    }
+ 
+  .bgGrey{
+    height: 60vh;
   }
+  
 }
 
 @media (min-width: 768px) and (max-width: $media-lg) {
-  .sliderItem {
-    min-height: auto;
-
-    img {
-      min-height: 350px;
-      aspect-ratio: 16/9;
-    }
-
-    :global {
-      .carousel-caption {
-        top: 100px !important;
-      }
-    }
-  }
+  
 }
