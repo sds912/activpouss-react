@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { STATUS } from "../../../constants/Status";
 import { db } from "../../../constants/firebase-config";
-import { collection, query, where, getDocs, orderBy} from "@firebase/firestore";
+import { collection, query, where, getDocs, orderBy, limit} from "@firebase/firestore";
 
 const initialState = {
     status: "",
@@ -23,7 +23,7 @@ const productVedettesSlice = createSlice({
 export const fetchProductVedette = createAsyncThunk("fetch/prodcuts/vdettes", async () => {
   try{
     const productsCollection = collection(db, 'products');
-    const q = query(productsCollection, where("type","==" ,"vedette"), orderBy('type'));
+    const q = query(productsCollection, where('category', 'array-contains', 'vedette'), limit(8));
     const snapshot = await getDocs(q);
     snapshot.docs.map(doc => console.log(doc.data()))
     let data = [];

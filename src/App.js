@@ -1,27 +1,40 @@
 import "./App.scss";
-import Naav from "./Components/Nav/Naav";
 import Home from "./Pages/Home/Home";
 import Cart from "./Pages/Cart/Cart";
-import Footer from "./Components/Footer/Footer";
 import ErrorPage from "./Pages/ErrorPage/ErrorPage";
 import ProductDetail from "./Components/ProductDetail/ProductDetail";
 import About from "./Pages/About/About";
 
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import WishList from "./Pages/WishList/WishList";
-import ProductManagement from "./Pages/Admin/ProductManagement";
 import Shop from "./Pages/Shop/Shop";
+import { Admin } from "./Pages/Admin/Admin";
+
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import Login from "./Pages/Login/Login";
+
+
+function PrivateRoute({ children }) {
+  const { currentUser } = useAuth();
+
+  return currentUser ? children : <Navigate to="/login" />;
+}
 
 function App() {
   return (
     <div className="App container-fluid p-0 m-0">
-      <Naav />
       <div className="main">
+        <AuthProvider>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/admin" element={<ProductManagement />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={
+            <PrivateRoute>
+              <Admin />
+            </PrivateRoute>
+            } />
           <Route path="/about" element={<About />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/products/:id" element={<ProductDetail />} />
@@ -29,8 +42,8 @@ function App() {
           <Route path="/wishlist" element={<WishList />} />
           <Route path="*" element={<ErrorPage />} />
         </Routes>
+        </AuthProvider>
       </div>
-      <Footer />
       <ToastContainer position="top-right" />
       <ToastContainer />
     </div>

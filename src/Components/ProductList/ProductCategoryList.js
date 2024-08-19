@@ -6,30 +6,14 @@ import ProductCard from "../ProductCard/ProductCard";
 import styles from "./productlist.module.scss";
 import Loader from "../Loader/Loader";
 import { fetchProductCategory } from "../../Redux/features/Product/ProductCategorySlice";
+import { CATEGORIES, CATEGORIES_LIST } from "../../constants/categories";
 
 const ProductCategoryList = () => {
 
 
   const [selectedCategory, setSelectedCategory] = useState();
 
-  const categories = [
-    {
-      value: "enfant",
-      name: "Enfants",
-    },
-    {
-      value: "traitement-cheveux",
-      name: "Traitement cheveux",
-    },
-    {
-      value: "soins-visage",
-      name: "Soins visage",
-    },
-    {
-      value: "soins-corporels",
-      name: "Soins corporels",
-    }
-  ];
+  const categories = CATEGORIES_LIST;
 
 
   const dispatch = useDispatch();

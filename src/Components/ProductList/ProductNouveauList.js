@@ -6,30 +6,14 @@ import ProductCard from "../ProductCard/ProductCard";
 import styles from "./productlist.module.scss";
 import Loader from "../Loader/Loader";
 import { fetchProductNouveaute } from "../../Redux/features/Product/ProductNouveauteSlice";
+import { CATEGORIES_LIST } from "../../constants/categories";
 
 const ProductNouveauList = () => {
 
 
   const [selectedCategory, setSelectedCategory] = useState();
 
-  const categories = [
-    {
-      value: "all",
-      name: "Soins capillaires",
-    },
-    {
-      value: "electronics",
-      name: "Traitement cheveux",
-    },
-    {
-      value: "men's clothing",
-      name: "Soins visage",
-    },
-    {
-      value: "women's clothing",
-      name: "Soins corporels",
-    }
-  ];
+  const categories = CATEGORIES_LIST;
 
 
   const dispatch = useDispatch();
@@ -55,7 +39,10 @@ const ProductNouveauList = () => {
               Nouveaux produits
             </div>
              <ul className={styles.categoryList}>
-              {categories.map(cat => <li className={cat.value === selectedCategory ? styles.selctedCategory : ''} onClick={() => dispatch(setSelectedCategory(cat.value))}>{cat.name}</li>)}
+              {categories.map(cat => <li className={cat.value === selectedCategory ? styles.selctedCategory : ''} 
+              onClick={() =>{
+              dispatch(fetchProductNouveaute(cat.value))
+              }}>{cat.name}</li>)}
              </ul>
           </div>
           <div className="col-12 col-sm-12 col-lg-9">

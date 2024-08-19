@@ -1,10 +1,6 @@
 import React, { useEffect} from "react";
-import { Container } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { STATUS } from "../../constants/Status";
 import ProductCard from "../ProductCard/ProductCard";
-import styles from "./productlist.module.scss";
-import Loader from "../Loader/Loader";
 import { fetchProductVedette } from "../../Redux/features/Product/ProductVedetteSlice";
 
 const ProductVedetteList = () => {

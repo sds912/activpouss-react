@@ -1,115 +1,261 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import { Card, Table, Button, Space, Modal, Form, Input, InputNumber, Upload, Select } from "antd";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProducts, addProduct, deleteProduct, updateProduct } from "../../Redux/features/Product/ProductSlice";
+import { EditOutlined, DeleteOutlined, EyeOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { ref, getDownloadURL, uploadBytes } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
-import { useDispatch } from 'react-redux';
-import { addProduct } from '../../Redux/features/Product/ProductSlice';
-import { storage } from '../../constants/firebase-config';
-import { ref, getDownloadURL , uploadBytes} from '@firebase/storage'; // Import Firebase storage and firestore
 import { toast } from 'react-toastify';
+import { storage } from "../../constants/firebase-config";
 
+const categories = [
+    { name: "Soins capillaires", value: "soins_capillaires" },
+    { name: "Traitement cheveux", value: "traitement_cheveux" },
+    { name: "Soins visage", value: "soins_visage" },
+    { name: "Soins corporels", value: "soins_corporels" }
+];
 
+const ProductManagement = () => {
+    const dispatch = useDispatch();
+    const { products } = useSelector((state) => state.products);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [form] = Form.useForm();
+    const [currentProduct, setCurrentProduct] = useState(null);
 
+    useEffect(() => {
+        dispatch(fetchProducts());
+    }, [dispatch]);
 
-const AddProductForm = () => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [images, setImages] = useState([]);
-  const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('');
+    const showAddProductModal = () => {
+        setCurrentProduct(null); // Reset current product for adding
+        form.resetFields();
+        setIsModalVisible(true);
+    };
 
- const categories = [
-    {
-      name: "Soins capillaires",
-      value: "soins_papillaires"
-    },
-    {
-    name: "Traitement cheveux",
-    value: "traitement_cheveux"
-    },
-    {
-    name: "Soins visage",
-    value: "soins_visage"
-    },
-    {
-        name: "Soins corporels",
-        value: "soins_corporels"
-    }
- ]
-  const dispatcher = useDispatch();
+    const showEditProductModal = (product) => {
+        setCurrentProduct(product);
+        form.setFieldsValue({
+            title: product.title,
+            price: product.price,
+            description: product.description,
+            category: product.category,
+            images: product.images.map(url => ({
+                uid: url, // unique identifier for the image
+                name: url.split('/').pop(), // use the filename from URL
+                status: 'done', // status to show the image as uploaded
+                url // URL of the image
+            }))
+        });
+        setIsModalVisible(true);
+    };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    const handleOk = async () => {
+        try {
+            const values = await form.validateFields();
 
-    try {
-      const imageUrls = await uploadImages(images);
-      await saveProduct(title, description, imageUrls, price, category);
-      console.log('Product added successfully');
-      // Reset form fields after successful submission
-      setTitle('');
-      setDescription('');
-      setImages([]);
-      setPrice('');
-    } catch (error) {
-      console.error('Error adding product: ', error);
-    }
-  };
+            // Handle image upload
+            const imageUrls = await uploadImages(values.images || []);
 
-  const uploadImages = async (images) => {
-    const imageUrls = [];
+            if (currentProduct) {
+                // Edit product
+                dispatch(updateProduct({ id: currentProduct.id, ...values, images: imageUrls }));
+            } else {
+                // Add product
+                dispatch(addProduct({ ...values, images: imageUrls }));
+            }
 
-    await Promise.all(
-      images.map(async (image) => {
-        const imageRef = ref(storage,`images/${uuidv4()}`);
-        await uploadBytes(imageRef,image)
-        const url = await getDownloadURL(imageRef);
-        imageUrls.push(url);
-      })
+            setIsModalVisible(false);
+            toast.success('Produit enregistré avec succès!', { autoClose: 1000 });
+        } catch (error) {
+            console.log("Validation Failed:", error);
+        }
+    };
+
+    const handleCancel = () => {
+        setIsModalVisible(false);
+    };
+
+    const uploadImages = async (images) => {
+        const imageUrls = [];
+
+        await Promise.all(
+            images.map(async (file) => {
+                if (file.url) {
+                    // If the file already has a URL, just push it to the imageUrls array
+                    imageUrls.push(file.url);
+                } else {
+                    const imageRef = ref(storage, `images/${uuidv4()}`);
+                    await uploadBytes(imageRef, file.originFileObj);
+                    const url = await getDownloadURL(imageRef);
+                    imageUrls.push(url);
+                }
+            })
+        );
+
+        return imageUrls;
+    };
+
+    const normFile = (e) => {
+        if (Array.isArray(e)) {
+            return e;
+        }
+        return e?.fileList;
+    };
+
+    const truncateDescription = (description, wordLimit) => {
+        const words = description.split(" ");
+        if (words.length > wordLimit) {
+            return words.slice(0, wordLimit).join(" ") + "...";
+        }
+        return description;
+    };
+
+    const showDeleteConfirm = (product) => {
+        Modal.confirm({
+            title: 'Êtes-vous sûr de vouloir supprimer ce produit?',
+            content: 'Cette action est irréversible.',
+            okText: 'Oui',
+            okType: 'danger',
+            cancelText: 'Non',
+            onOk() {
+                dispatch(deleteProduct(product.id));
+            },
+        });
+    };
+
+    const columns = [
+        {
+            title: 'Images',
+            dataIndex: 'images',
+            key: 'images',
+            render: (images) => (
+                <Space>
+                    {images.map((image, index) => (
+                        <img key={index} src={image} alt={`Product ${index}`} style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
+                    ))}
+                </Space>
+            ),
+        },
+        {
+            title: 'Nom',
+            dataIndex: 'title',
+            key: 'title',
+        },
+        {
+            title: 'Prix',
+            dataIndex: 'price',
+            key: 'price',
+            render: (price) => `${price} $`, // Assuming price is in dollars
+        },
+        {
+            title: 'Description',
+            dataIndex: 'description',
+            key: 'description',
+            render: (text) => truncateDescription(text, 100),
+        },
+        {
+            title: 'Actions',
+            key: 'action',
+            render: (text, record) => (
+                <Space size="middle">
+                    <Button type="primary" icon={<EyeOutlined />} onClick={() => console.log('View product:', record)} />
+                    <Button type="primary" icon={<EditOutlined />} onClick={() => showEditProductModal(record)} />
+                    <Button type="danger" icon={<DeleteOutlined />} onClick={() => showDeleteConfirm(record)} />
+                </Space>
+            ),
+        },
+    ];
+
+    return (
+        <div className="container">
+            <Card
+                type="inner"
+                title="Liste Produits"
+                extra={
+                    <Button type="primary" icon={<PlusOutlined />} onClick={showAddProductModal}>
+                        Ajouter un produit
+                    </Button>
+                }
+            >
+                <Table dataSource={products} columns={columns} rowKey="id" />
+            </Card>
+
+            <Modal
+                title={currentProduct ? "Modifier le produit" : "Ajouter un produit"}
+                open={isModalVisible}
+                onOk={handleOk}
+                onCancel={handleCancel}
+            >
+                <Form
+                    form={form}
+                    layout="vertical"
+                    name="productForm"
+                >
+                    <Form.Item
+                        name="title"
+                        label="Nom du produit"
+                        rules={[{ required: true, message: 'Veuillez entrer le nom du produit' }]}
+                    >
+                        <Input />
+                    </Form.Item>
+                    <Form.Item
+                        name="price"
+                        label="Prix"
+                        rules={[{ required: true, message: 'Veuillez entrer le prix du produit' }]}
+                    >
+                        <InputNumber min={0} style={{ width: "100%" }} />
+                    </Form.Item>
+                    <Form.Item
+                        name="price5"
+                        label="Prix"
+                        rules={[{ required: true, message: 'Veuillez entrer le prix du produit' }]}
+                    >
+                        <InputNumber min={0} style={{ width: "100%" }} />
+                    </Form.Item>
+                    <Form.Item label="Select">
+                        <Select>
+                        <Select.Option value="demo">Demo</Select.Option>
+                        </Select>
+                    </Form.Item>
+                    <Form.Item
+                        name="description"
+                        label="Description"
+                        rules={[{ required: true, message: 'Veuillez entrer la description du produit' }]}
+                    >
+                        <Input.TextArea rows={4} />
+                    </Form.Item>
+                    <Form.Item
+                        name="category"
+                        label="Catégorie"
+                        rules={[{ required: true, message: 'Veuillez sélectionner une catégorie' }]}
+                    >
+                        <Select>
+                            {categories.map((cat) => (
+                                <Select.Option key={cat.value} value={cat.value}>
+                                    {cat.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item
+                        name="images"
+                        label="Images"
+                        valuePropName="fileList"
+                        getValueFromEvent={normFile}
+                        rules={[{ required: true, message: 'Veuillez télécharger au moins une image' }]}
+                    >
+                        <Upload
+                            listType="picture"
+                            beforeUpload={() => false} // Prevent automatic upload
+                            multiple
+                        >
+                            <Button icon={<UploadOutlined />}>Charger une image</Button>
+                        </Upload>
+                    </Form.Item>
+                </Form>
+            </Modal>
+        </div>
     );
-
-    return imageUrls;
-  };
-
-  const saveProduct = async (title, description, images, price) => {
-   dispatcher(addProduct({title,description,images, price}));
-   toast.success(`Enrégistré avec succès`, {
-    autoClose: 1000,
-  });
-  };
-
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    setImages(files);
-  };
-
-  return (
-    <div className='my-5'>
-      <h2>Ajouter un produit</h2>
-      <form onSubmit={handleSubmit}>
-        <div className='form-group'>
-           <label>Catégorie</label>
-           <select className='form-select'>
-            {categories.map(cat => <option value={cat.value} onChange={() => setCategory(cat.value)}>{cat.name}</option>)}
-           </select>
-        </div>
-        <div className='form-group mt-3'>
-          <label>Titre</label>
-          <input className='form-control' type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
-        </div>
-        <div className='form-group my-3'>
-          <label>Description</label>
-          <textarea className='form-control' value={description} onChange={(e) => setDescription(e.target.value)} required />
-        </div>
-        <div className='form-group'>
-          <label>Images</label>
-          <input className='form-control' type="file" multiple onChange={handleImageChange} />
-        </div>
-        <div className='form-group my-3'>
-          <label>Prix</label>
-          <input className='form-control' type="number" value={price} onChange={(e) => setPrice(e.target.value)} required />
-        </div>
-        <button type="submit" className='btn btn-success'>Enrégister</button>
-      </form>
-    </div>
-  );
 };
 
-export default AddProductForm;
+export default ProductManagement;
